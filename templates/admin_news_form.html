@@ -6,7 +6,6 @@
 <section class="admin-form-section">
     <h2 class="category-title">{{ title }}</h2>
 
-    <!-- Formulario -->
     <form method="POST" action="" class="styled-form" enctype="multipart/form-data">
         {{ form.hidden_tag() }}
 
@@ -25,9 +24,11 @@
             {{ form.author(class="form-control") }}
         </div>
         
+        <!-- ! IMPORTANTE: Este es el campo donde se aplicará el editor -->
         <div class="form-group">
             {{ form.content.label(class="form-label") }}
-            {{ form.content(class="tinymce-editor") }}
+            <!-- Le asignamos un id="content-editor" para que el script lo encuentre -->
+            {{ form.content(id="content-editor") }}
         </div>
 
         {% if news and news.image_filename %}
@@ -56,23 +57,31 @@
     </form>
 </section>
 
-<!-- Scripts para activar el editor de texto -->
-<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<!-- ! TU CÓDIGO PERSONAL: Aquí están los scripts que me enviaste -->
+
+<!-- 1. El script con tu "llave" personal -->
+<script src="https://cdn.tiny.cloud/1/pvr7i04qp2950saerkil55b5v05fyofvfqblxvl6kymna0zm/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
+
+<!-- 2. La configuración del editor -->
 <script>
   tinymce.init({
-    selector: 'textarea.tinymce-editor',
-    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
-    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    // Apunta al campo de texto correcto usando su 'id'
+    selector: 'textarea#content-editor', 
+    
+    // Todos los plugins que te dio TinyMCE para una experiencia completa
+    plugins: [
+      'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
+      'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf'
+    ],
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+    
+    // Configuraciones adicionales
     height: 400,
     menubar: false,
+    tinycomments_mode: 'embedded',
+    tinycomments_author: 'Agustin Villablanca',
+    ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
   });
 </script>
-
-<!-- ! NUEVO: Estilo para ocultar el aviso de la API Key -->
-<style>
-    .tox-notifications-container {
-        display: none !important;
-    }
-</style>
 
 {% endblock %}
