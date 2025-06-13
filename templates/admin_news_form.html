@@ -6,13 +6,22 @@
 <section class="admin-form-section">
     <h2 class="category-title">{{ title }}</h2>
 
+    <!-- Zona para mostrar mensajes flash, como "Noticia guardada" o "Error" -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <form method="POST" action="" class="styled-form" enctype="multipart/form-data">
-        {{ form.hidden_tag() }}
+        {{ form.hidden_tag() }} <!-- Importante para seguridad -->
 
         <div class="form-group">
             {{ form.title.label(class="form-label") }}
             {{ form.title(class="form-control") }}
-            <!-- ! AÑADIDO: Muestra errores para este campo -->
+            <!-- ! Aquí se mostrará un error si el título es inválido -->
             {% for error in form.title.errors %}
                 <span class="error-message">{{ error }}</span>
             {% endfor %}
@@ -29,26 +38,17 @@
         <div class="form-group">
             {{ form.author.label(class="form-label") }}
             {{ form.author(class="form-control") }}
-            {% for error in form.author.errors %}
-                <span class="error-message">{{ error }}</span>
-            {% endfor %}
         </div>
         
+        <!-- ! TEMPORAL: Usaremos un campo de texto simple. SIN EDITOR. -->
         <div class="form-group">
             {{ form.content.label(class="form-label") }}
-            {{ form.content(id="content-editor") }}
+            {{ form.content(class="form-control", rows="15") }}
             {% for error in form.content.errors %}
                 <span class="error-message">{{ error }}</span>
             {% endfor %}
         </div>
         
-        <!-- El resto del formulario se mantiene igual -->
-        {% if news and news.image_filename %}
-            <div class="form-group current-image-preview">
-                <p><strong>Imagen Actual:</strong></p>
-                <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="Imagen actual">
-            </div>
-        {% endif %}
         <div class="form-group">
             {{ form.image_file.label(class="form-label") }}
             {{ form.image_file(class="form-control-file") }}
@@ -56,26 +56,11 @@
                 <span class="error-message">{{ error }}</span>
             {% endfor %}
         </div>
-        {% if news and news.image_filename %}
-        <div class="form-group checkbox-group">
-            {{ form.delete_image(class="form-checkbox") }}
-            {{ form.delete_image.label(class="form-label-checkbox") }}
-        </div>
-        {% endif %}
+        
         <div class="form-group form-buttons">
             <a href="{{ url_for('admin_news') }}" class="button-secondary">Cancelar</a>
             {{ form.submit(class="button-primary") }}
         </div>
     </form>
 </section>
-
-<!-- Scripts del editor de texto -->
-<script src="https://cdn.tiny.cloud/1/pvr7i04qp2950saerkil55b5v05fyofvfqblxvl6kymna0zm/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-<script>
-  tinymce.init({
-    selector: 'textarea#content-editor',
-    plugins: 'lists link image table code help wordcount',
-    toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | indent outdent | bullist numlist | code | help'
-  });
-</script>
 {% endblock %}

@@ -236,4 +236,28 @@ a {
         font-size: 1.1rem;
     }
 }
+/* ... (todo tu código de css anterior) ... */
+
+/* ! AÑADIDO: Estilo para los mensajes de error en los formularios */
+.error-message {
+    color: #a43131; /* Rojo oscuro */
+    font-weight: bold;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Estilo para los mensajes flash en la parte superior del formulario */
+.flash-messages {
+    margin-bottom: 1.5rem;
+}
+.alert {
+    padding: 1rem;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+}
+.alert-success { background-color: #28a745; }
+.alert-danger { background-color: #dc3545; }
+.alert-info { background-color: #17a2b8; }
 
