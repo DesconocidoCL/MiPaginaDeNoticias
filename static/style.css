@@ -261,3 +261,9 @@ a {
 .alert-danger { background-color: #dc3545; }
 .alert-info { background-color: #17a2b8; }
 
+/* Estilo para el campo de texto de las noticias */
+.styled-form textarea.form-control {
+    font-family: 'Times New Roman', Times, serif; /* Fuente Serif Clásica */
+    font-size: 16px; /* Equivalente a 12pt, muy legible */
+    line-height: 1.6;
+}

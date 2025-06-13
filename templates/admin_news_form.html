@@ -1,62 +1,30 @@
 {% extends "base.html" %}
-
 {% block title %}{{ title }}{% endblock %}
-
 {% block content %}
 <section class="admin-form-section">
     <h2 class="category-title">{{ title }}</h2>
-
-    <!-- Zona para mostrar mensajes flash, como "Noticia guardada" o "Error" -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <form method="POST" action="" class="styled-form" enctype="multipart/form-data">
-        {{ form.hidden_tag() }} <!-- Importante para seguridad -->
-
+        {{ form.hidden_tag() }}
         <div class="form-group">
             {{ form.title.label(class="form-label") }}
             {{ form.title(class="form-control") }}
-            <!-- ! Aquí se mostrará un error si el título es inválido -->
-            {% for error in form.title.errors %}
-                <span class="error-message">{{ error }}</span>
-            {% endfor %}
         </div>
-
         <div class="form-group">
             {{ form.category.label(class="form-label") }}
             {{ form.category(class="form-control") }}
-            {% for error in form.category.errors %}
-                <span class="error-message">{{ error }}</span>
-            {% endfor %}
         </div>
-
         <div class="form-group">
             {{ form.author.label(class="form-label") }}
             {{ form.author(class="form-control") }}
         </div>
-        
-        <!-- ! TEMPORAL: Usaremos un campo de texto simple. SIN EDITOR. -->
         <div class="form-group">
             {{ form.content.label(class="form-label") }}
-            {{ form.content(class="form-control", rows="15") }}
-            {% for error in form.content.errors %}
-                <span class="error-message">{{ error }}</span>
-            {% endfor %}
+            {{ form.content(class="form-control", rows="20") }}
         </div>
-        
         <div class="form-group">
             {{ form.image_file.label(class="form-label") }}
             {{ form.image_file(class="form-control-file") }}
-            {% for error in form.image_file.errors %}
-                <span class="error-message">{{ error }}</span>
-            {% endfor %}
         </div>
-        
         <div class="form-group form-buttons">
             <a href="{{ url_for('admin_news') }}" class="button-secondary">Cancelar</a>
             {{ form.submit(class="button-primary") }}
