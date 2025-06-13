@@ -12,44 +12,56 @@
         <div class="form-group">
             {{ form.title.label(class="form-label") }}
             {{ form.title(class="form-control") }}
+            <!-- ! AÑADIDO: Muestra errores para este campo -->
+            {% for error in form.title.errors %}
+                <span class="error-message">{{ error }}</span>
+            {% endfor %}
         </div>
 
         <div class="form-group">
             {{ form.category.label(class="form-label") }}
             {{ form.category(class="form-control") }}
+            {% for error in form.category.errors %}
+                <span class="error-message">{{ error }}</span>
+            {% endfor %}
         </div>
 
         <div class="form-group">
             {{ form.author.label(class="form-label") }}
             {{ form.author(class="form-control") }}
+            {% for error in form.author.errors %}
+                <span class="error-message">{{ error }}</span>
+            {% endfor %}
         </div>
         
-        <!-- ! IMPORTANTE: Este es el campo donde se aplicará el editor -->
         <div class="form-group">
             {{ form.content.label(class="form-label") }}
-            <!-- Le asignamos un id="content-editor" para que el script lo encuentre -->
             {{ form.content(id="content-editor") }}
+            {% for error in form.content.errors %}
+                <span class="error-message">{{ error }}</span>
+            {% endfor %}
         </div>
-
+        
+        <!-- El resto del formulario se mantiene igual -->
         {% if news and news.image_filename %}
             <div class="form-group current-image-preview">
                 <p><strong>Imagen Actual:</strong></p>
                 <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="Imagen actual">
             </div>
         {% endif %}
-        
         <div class="form-group">
             {{ form.image_file.label(class="form-label") }}
             {{ form.image_file(class="form-control-file") }}
+            {% for error in form.image_file.errors %}
+                <span class="error-message">{{ error }}</span>
+            {% endfor %}
         </div>
-        
         {% if news and news.image_filename %}
         <div class="form-group checkbox-group">
             {{ form.delete_image(class="form-checkbox") }}
             {{ form.delete_image.label(class="form-label-checkbox") }}
         </div>
         {% endif %}
-
         <div class="form-group form-buttons">
             <a href="{{ url_for('admin_news') }}" class="button-secondary">Cancelar</a>
             {{ form.submit(class="button-primary") }}
@@ -57,31 +69,13 @@
     </form>
 </section>
 
-<!-- ! TU CÓDIGO PERSONAL: Aquí están los scripts que me enviaste -->
-
-<!-- 1. El script con tu "llave" personal -->
+<!-- Scripts del editor de texto -->
 <script src="https://cdn.tiny.cloud/1/pvr7i04qp2950saerkil55b5v05fyofvfqblxvl6kymna0zm/tinymce/7/tinymce.min.js" referrerpolicy="origin"></script>
-
-<!-- 2. La configuración del editor -->
 <script>
   tinymce.init({
-    // Apunta al campo de texto correcto usando su 'id'
-    selector: 'textarea#content-editor', 
-    
-    // Todos los plugins que te dio TinyMCE para una experiencia completa
-    plugins: [
-      'anchor', 'autolink', 'charmap', 'codesample', 'emoticons', 'image', 'link', 'lists', 'media', 'searchreplace', 'table', 'visualblocks', 'wordcount',
-      'checklist', 'mediaembed', 'casechange', 'formatpainter', 'pageembed', 'a11ychecker', 'tinymcespellchecker', 'permanentpen', 'powerpaste', 'advtable', 'advcode', 'editimage', 'advtemplate', 'ai', 'mentions', 'tinycomments', 'tableofcontents', 'footnotes', 'mergetags', 'autocorrect', 'typography', 'inlinecss', 'markdown','importword', 'exportword', 'exportpdf'
-    ],
-    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-    
-    // Configuraciones adicionales
-    height: 400,
-    menubar: false,
-    tinycomments_mode: 'embedded',
-    tinycomments_author: 'Agustin Villablanca',
-    ai_request: (request, respondWith) => respondWith.string(() => Promise.reject('See docs to implement AI Assistant')),
+    selector: 'textarea#content-editor',
+    plugins: 'lists link image table code help wordcount',
+    toolbar: 'undo redo | blocks | bold italic | alignleft aligncenter alignright | indent outdent | bullist numlist | code | help'
   });
 </script>
-
 {% endblock %}
