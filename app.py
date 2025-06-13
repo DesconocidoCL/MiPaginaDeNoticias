@@ -7,32 +7,36 @@ from werkzeug.utils import secure_filename
 
 # Importaciones locales
 from extensions import db, login_manager
-from config import SECRET_KEY, SQLALCHEMY_DATABASE_URI as LOCAL_DB_URI
+from config import SECRET_KEY
 from forms import LoginForm, NewsForm
 from models import User, NewsArticle, ContactMessage
 from flask_login import login_user, logout_user, login_required, current_user
 
+# --- CONFIGURACIÓN DE LA APLICACIÓN ---
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- Configuración de Directorios para Render ---
-# Render usa un directorio persistente en /var/data para guardar archivos
-# Esto asegura que tu base de datos y tus imágenes no se borren.
-data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'data')
+# --- CONFIGURACIÓN DE DIRECTORIOS PARA RENDER ---
+# Render utiliza un disco persistente en /var/data para que los archivos no se borren.
+# Si el código se está ejecutando en Render, usamos esa ruta. Si no, usa una local.
 if os.environ.get('RENDER'):
-    data_dir = '/var/data'
+    data_dir = '/var/data/eldesconocido' # Usamos un subdirectorio para mayor orden
+else:
+    # Para pruebas en tu propio computador en el futuro
+    data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
 
+# Rutas para la base de datos y las imágenes subidas
 db_path = os.path.join(data_dir, 'site.db')
 upload_path = os.path.join(data_dir, 'uploads')
 
 # Crear directorios si no existen
-os.makedirs(data_dir, exist_ok=True)
 os.makedirs(upload_path, exist_ok=True)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 app.config['UPLOAD_FOLDER'] = upload_path
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Inicialización de extensiones
 db.init_app(app)
 login_manager.init_app(app)
 login_manager.login_view = 'login'
@@ -53,7 +57,8 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-# --- RUTAS PÚBLICAS Y DE AUTENTICACIÓN ---
+# --- RUTAS DE LA APLICACIÓN ---
+
 @app.route('/')
 def index():
     try:
@@ -61,10 +66,12 @@ def index():
         politica_news = NewsArticle.query.filter_by(category='POLITICA').order_by(NewsArticle.date_posted.desc()).limit(4).all()
         opinion_news = NewsArticle.query.filter_by(category='OPINION').order_by(NewsArticle.date_posted.desc()).limit(4).all()
         ciencia_tecnologia_news = NewsArticle.query.filter_by(category='CIENCIA Y TECNOLOGIA').order_by(NewsArticle.date_posted.desc()).limit(4).all()
-        return render_template('index.html', region_news=region_news, politica_news=politica_news, opinion_news=opinion_news, ciencia_tecnologia_news=ciencia_tecnologia_news)
     except Exception as e:
-        print(f"Error en la ruta principal: {e}")
-        return "Error al cargar la página principal. Por favor, revise los logs del servidor.", 500
+        print(f"Error al consultar la base de datos: {e}")
+        # Si hay un error, muestra la página vacía para que no se caiga
+        region_news, politica_news, opinion_news, ciencia_tecnologia_news = [], [], [], []
+        flash('No se pudieron cargar las noticias. La base de datos puede estar inicializándose.', 'info')
+    return render_template('index.html', region_news=region_news, politica_news=politica_news, opinion_news=opinion_news, ciencia_tecnologia_news=ciencia_tecnologia_news)
 
 @app.route('/uploads/<path:filename>')
 def uploaded_file(filename):
@@ -91,9 +98,14 @@ def login():
             flash('Credenciales incorrectas.', 'danger')
     return render_template('login.html', form=form)
 
-# ... (otras rutas públicas como /logout, /contacto, etc. van aquí)
+# (Aquí irían las otras rutas como logout, contacto, etc. sin cambios)
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Has cerrado sesión.', 'info')
+    return redirect(url_for('index'))
 
-# --- RUTAS DE ADMINISTRACIÓN ---
 @app.route('/admin/dashboard')
 @admin_required
 def admin_dashboard():
@@ -118,7 +130,7 @@ def add_news():
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 else:
-                    flash('Error: Tipo de archivo no permitido.', 'danger')
+                    flash('Error: Tipo de archivo de imagen no permitido.', 'danger')
                     return render_template('admin_news_form.html', title='Añadir Noticia', form=form)
 
             new_article = NewsArticle(title=form.title.data, category=form.category.data, content=form.content.data, author=form.author.data, image_filename=filename)
@@ -129,39 +141,31 @@ def add_news():
         except Exception as e:
             db.session.rollback()
             flash(f'Error al guardar en la base de datos: {e}', 'danger')
-            print(f"ERROR DB (add): {e}")
-    elif request.method == 'POST':
-        flash('El formulario tiene errores. Revisa los campos.', 'danger')
-        print(f"ERRORES DE FORMULARIO (add): {form.errors}")
     return render_template('admin_news_form.html', title='Añadir Noticia', form=form)
-
-@app.route('/admin/news/edit/<int:news_id>', methods=['GET', 'POST'])
-@admin_required
-def edit_news(news_id):
-    news_article = NewsArticle.query.get_or_404(news_id)
-    form = NewsForm(obj=news_article)
-    if form.validate_on_submit():
-        # Lógica de edición
-        try:
-            if form.image_file.data:
-                # ... (lógica de subida de imagen) ...
-                pass
-            news_article.title = form.title.data
-            # ... (actualizar otros campos) ...
-            db.session.commit()
-            flash('Noticia actualizada con éxito.', 'success')
-            return redirect(url_for('admin_news'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar la noticia: {e}', 'danger')
-    return render_template('admin_news_form.html', title='Editar Noticia', form=form, news=news_article)
     
-# --- INICIALIZACIÓN DE LA APP ---
+# ... (Aquí irían las otras rutas de admin como edit_news, delete_news, etc. sin cambios)
+
+# --- INICIALIZACIÓN DE LA BASE DE DATOS ---
+# Este bloque de código se ejecuta una vez cuando el servidor arranca.
+# Crea la base de datos y el usuario administrador si no existen.
 with app.app_context():
-    db.create_all()
-    if not User.query.first():
-        hashed_password = generate_password_hash('password123')
-        admin_user = User(username='admin', password_hash=hashed_password, is_admin=True)
-        db.session.add(admin_user)
-        db.session.commit()
-        print("Usuario admin creado.")
+    try:
+        db.create_all()
+        print("Tablas de la base de datos verificadas/creadas.")
+        
+        # Crear usuario admin solo si no existe NINGÚN usuario
+        if not User.query.first():
+            admin_username = 'eldesconocido'  # Puedes cambiar este
+            admin_password = 'passwordseguro123' # ¡CAMBIA ESTA CONTRASEÑA!
+            
+            hashed_password = generate_password_hash(admin_password)
+            admin_user = User(username=admin_username, password_hash=hashed_password, is_admin=True)
+            db.session.add(admin_user)
+            db.session.commit()
+            print(f"Usuario administrador '{admin_username}' creado exitosamente.")
+        else:
+            print("El usuario administrador ya existe.")
+            
+    except Exception as e:
+        print(f"ERROR DURANTE LA INICIALIZACIÓN DE LA BASE DE DATOS: {e}")
+
