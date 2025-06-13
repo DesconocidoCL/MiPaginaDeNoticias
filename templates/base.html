@@ -5,19 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desconocido - {% block title %}{% endblock %}</title>
     
+    <!-- ! NUEVO: Esta línea agrega el logo a la pestaña del navegador -->
+    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='logo1.jpg') }}">
+    
     <!-- Fuentes de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     
-    <!-- Nuestro CSS personalizado que define el nuevo estilo -->
+    <!-- Nuestro CSS personalizado -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <header class="main-header">
         <div class="logo-container">
             <a href="{{ url_for('index') }}">
-                <img src="{{ url_for('static', filename='logo1.png') }}" alt="Logo Desconocido" class="logo">
+                <!-- Asumimos que también tienes un logo para el header, si no, puedes usar el mismo 'logo1.jpg' -->
+                <img src="{{ url_for('static', filename='logo1.jpg') }}" alt="Logo Desconocido" class="logo">
             </a>
             <h1><a href="{{ url_for('index') }}">DESCONOCIDO</a></h1>
         </div>
