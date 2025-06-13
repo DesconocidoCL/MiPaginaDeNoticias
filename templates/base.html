@@ -4,23 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desconocido - {% block title %}{% endblock %}</title>
-    
-    <!-- ! CORREGIDO: Ahora apunta a 'logo1.png' para el logo de la pestaña -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo1.png') }}">
-    
-    <!-- Fuentes de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    
-    <!-- Nuestro CSS personalizado -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <header class="main-header">
         <div class="logo-container">
             <a href="{{ url_for('index') }}">
-                <!-- ! CORREGIDO: Ahora apunta a 'logo1.png' para el logo del encabezado -->
                 <img src="{{ url_for('static', filename='logo1.png') }}" alt="Logo Desconocido" class="logo">
             </a>
             <h1><a href="{{ url_for('index') }}">DESCONOCIDO</a></h1>
@@ -28,10 +21,11 @@
         <nav class="main-nav">
             <ul>
                 <li><a href="{{ url_for('index') }}">INICIO</a></li>
-                <li><a href="{{ url_for('category_region') }}">LA REGION</a></li>
-                <li><a href="{{ url_for('category_politica') }}">POLITICA</a></li>
-                <li><a href="{{ url_for('category_opinion') }}">OPINION</a></li>
-                <li><a href="{{ url_for('category_ciencia_tecnologia') }}">CIENCIA Y TECNOLOGIA</a></li>
+                <!-- ENLACES CORREGIDOS -->
+                <li><a href="{{ url_for('category_page', category_name='region') }}">LA REGION</a></li>
+                <li><a href="{{ url_for('category_page', category_name='politica') }}">POLITICA</a></li>
+                <li><a href="{{ url_for('category_page', category_name='opinion') }}">OPINION</a></li>
+                <li><a href="{{ url_for('category_page', category_name='ciencia-tecnologia') }}">CIENCIA Y TECNOLOGIA</a></li>
                 <li><a href="{{ url_for('contact_page') }}">CONTACTO</a></li>
                 
                 {% if current_user.is_authenticated and current_user.is_admin %}

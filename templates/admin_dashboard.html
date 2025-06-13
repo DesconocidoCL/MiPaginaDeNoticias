@@ -13,31 +13,35 @@
 
     <div class="row align-items-md-stretch">
         <!-- Tarjeta para Gestionar Noticias -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="h-100 p-5 text-bg-dark rounded-3">
                 <h2>Noticias</h2>
-                <p>Añade, edita o elimina artículos. Mantén a tus lectores informados con las últimas novedades.</p>
-                <a href="{{ url_for('admin_news') }}" class="btn btn-outline-light" type="button">
-                    <i class="bi bi-pencil-square"></i> Gestionar Noticias
-                </a>
+                <p>Añade, edita o elimina artículos.</p>
+                <a href="{{ url_for('admin_news') }}" class="btn btn-outline-light" type="button">Gestionar Noticias</a>
                 <span class="badge rounded-pill text-bg-light ms-2">{{ total_news }} publicadas</span>
             </div>
         </div>
         
         <!-- Tarjeta para Ver Mensajes de Contacto -->
-        <div class="col-md-6 mb-4">
+        <div class="col-md-4 mb-4">
             <div class="h-100 p-5 bg-light border rounded-3">
-                <h2>Mensajes de Contacto</h2>
-                <p>Revisa los mensajes enviados por tus visitantes a través del formulario de contacto.</p>
-                <a href="{{ url_for('admin_contacts') }}" class="btn btn-outline-secondary" type="button">
-                    <i class="bi bi-envelope-fill"></i> Ver Mensajes
-                </a>
+                <h2>Mensajes</h2>
+                <p>Revisa los mensajes de los visitantes.</p>
+                <!-- CORREGIDO: Enlace a admin_contacts -->
+                <a href="{{ url_for('admin_contacts') }}" class="btn btn-outline-secondary" type="button">Ver Mensajes</a>
                  <span class="badge rounded-pill text-bg-secondary ms-2">{{ total_messages }} recibidos</span>
             </div>
         </div>
-    </div>
 
-    <!-- ! ELIMINADO: Se quitó el enlace a 'admin_users' que causaba el error -->
-    
+        <!-- Tarjeta para Gestionar Usuarios -->
+        <div class="col-md-4 mb-4">
+            <div class="h-100 p-5 text-bg-primary rounded-3">
+                <h2>Usuarios</h2>
+                <p>Gestiona las cuentas de administrador.</p>
+                <!-- CORREGIDO: Enlace a admin_users -->
+                <a href="{{ url_for('admin_users') }}" class="btn btn-outline-light" type="button">Gestionar Usuarios</a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

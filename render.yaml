@@ -1,21 +1,38 @@
+# render.yaml
+# ==============================================================================
 # Este es el manual de instrucciones para el servidor de Render.
 # Garantiza que la página se construya y ejecute correctamente.
+# ==============================================================================
 
 services:
   # Define el servicio web principal
   - type: web
-    name: eldesconocido
+    name: eldesconocido # Puedes cambiar este nombre
     env: python
-    plan: free # El plan gratuito
-    
+    plan: free # El plan gratuito funciona bien para empezar
+
     # Comandos para construir y arrancar el servidor
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --bind 0.0.0.0:$PORT"
-    
+    # Usamos Gunicorn, un servidor WSGI de nivel de producción
+    startCommand: "gunicorn app:app"
+
     # ¡LA CLAVE! Esto crea un "disco duro" persistente en el servidor.
-    # Aquí se guardarán tu base de datos y las imágenes que subas,
-    # asegurando que NO se borren con las actualizaciones.
+    # Aquí se guardarán tu base de datos (site.db) y las imágenes que subas,
+    # asegurando que NO se borren con las actualizaciones o reinicios.
     disks:
-      - name: eldesconocido-data
+      - name: datos-persistentes-eldesconocido
         mountPath: /var/data/project_data
-        sizeGB: 1
+        sizeGB: 1 # 1 GB es suficiente para empezar
+
+    # --- VARIABLES DE ENTORNO ---
+    # Aquí es donde configuras las claves secretas y contraseñas de forma segura.
+    # Ve al dashboard de Render > Environment y añade estas claves.
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.4 # Especifica una versión de Python
+      - key: SECRET_KEY
+        generateValue: true # Render generará una clave segura automáticamente
+      - key: ADMIN_USER
+        value: eldesconocido # Tu nombre de usuario admin
+      - key: ADMIN_PASS
+        sync: false # ¡NUNCA guardes contraseñas en el YAML! Configúrala en el Dashboard.
