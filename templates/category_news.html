@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category_name }} News{% endblock %}
+
+{% block content %}
+    <section class="news-section">
+        <h2>{{ category_name }}</h2>
+        <div class="articles-grid">
+            {% for news in news_articles %}
+            <article class="news-card">
+                {% if news.image_filename %}
+                    {% if news.image_filename.startswith('http://') or news.image_filename.startswith('https://') %}
+                        <img src="{{ news.image_filename }}" alt="{{ news.title }}">
+                    {% else %}
+                        <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="{{ news.title }}">
+                    {% endif %}
+                {% else %}
+                    <img src="https://via.placeholder.com/400x250?text={{ category_name }}" alt="Imagen de Noticia">
+                {% endif %}
+                <h3>{{ news.title }}</h3>
+                {% if news.category.upper() == 'OPINION' %}
+                    <p class="author">Por {{ news.author }}</p>
+                {% endif %}
+                <p>{{ news.content[:200] }}...</p> {# Muestra un extracto más largo aquí #}
+                <a href="#" class="read-more">Leer más</a> {# En un proyecto real, esto sería un link a la noticia completa #}
+            </article>
+            {% else %}
+            <p class="no-news-message">No hay noticias en esta sección todavía.</p>
+            {% endfor %}
+        </div>
+        <div class="view-more-container" style="margin-top: 50px;">
+            <a href="{{ url_for('index') }}" class="view-more-button">Volver al Inicio</a>
+        </div>
+    </section>
+{% endblock %}

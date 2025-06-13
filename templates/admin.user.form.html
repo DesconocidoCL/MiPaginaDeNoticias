@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %} {# Solo usamos 'title' #}
+
+{% block content %}
+    <section class="admin-form-section">
+        <h2>{{ title }}</h2>
+        <form method="POST" action="" class="login-form"> {# Usamos login-form para el estilo #}
+            {{ form.hidden_tag() }}
+            <div class="form-group">
+                {{ form.username.label }}
+                {{ form.username(class="form-control") }}
+                {% if form.username.errors %}
+                    <ul class="errors">{% for error in form.username.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.password.label }}
+                {{ form.password(class="form-control") }}
+                {% if form.password.errors %}
+                    <ul class="errors">{% for error in form.password.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+                {% if 'Editar' in title %}
+                <small class="form-text-help">Deja la contraseña en blanco si no deseas cambiarla.</small>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.confirm_password.label }}
+                {{ form.confirm_password(class="form-control") }}
+                {% if form.confirm_password.errors %}
+                    <ul class="errors">{% for error in form.confirm_password.errors %}<li>{{ error %}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.is_admin.label }}
+                {{ form.is_admin(class="form-checkbox") }} {# Nuevo campo de checkbox #}
+                {% if form.is_admin.errors %}
+                    <ul class="errors">{% for error in form.is_admin.errors %}<li>{{ error }}</li>{% endfor %}</ul>
+                {% endif %}
+            </div>
+            <div class="form-group">
+                {{ form.submit(class="submit-button") }}
+                <a href="{{ url_for('admin_users') }}" class="cancel-button">Cancelar</a>
+            </div>
+        </form>
+    </section>
+{% endblock %}

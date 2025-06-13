@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Noticias Principal{% endblock %}
+
+{% block content %}
+
+<!-- Macro para renderizar cada sección de noticias -->
+{% macro render_category_section(title, news_list, category_url) %}
+    {% if news_list %}
+    <section class="category-section">
+        <h2 class="category-title">{{ title }}</h2>
+        <div class="articles-grid">
+            {% for news in news_list %}
+            <article class="news-card">
+                <a href="{{ url_for('news_detail', news_id=news.id) }}" class="card-link-wrapper">
+                    {% if news.image_filename %}
+                        <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="{{ news.title }}">
+                    {% else %}
+                        <!-- Placeholder con colores sobrios -->
+                        <img src="https://placehold.co/400x250/333333/FFFFFF?text=Desconocido" alt="Imagen no disponible">
+                    {% endif %}
+                    <div class="card-content">
+                        <h3>{{ news.title }}</h3>
+                        <p>{{ news.content | truncate(120) }}</p>
+                    </div>
+                </a>
+                <div class="card-footer">
+                     <a href="{{ url_for('news_detail', news_id=news.id) }}" class="read-more">Leer más...</a>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        <div class="view-more-container">
+             <a href="{{ url_for(category_url) }}" class="view-more-button">Ver Todas de {{ title }}</a>
+        </div>
+    </section>
+    {% endif %}
+{% endmacro %}
+
+{{ render_category_section('LA REGION', region_news, 'category_region') }}
+{{ render_category_section('POLITICA', politica_news, 'category_politica') }}
+{{ render_category_section('CIENCIA Y TECNOLOGIA', ciencia_tecnologia_news, 'category_ciencia_tecnologia') }}
+{{ render_category_section('OPINION', opinion_news, 'category_opinion') }}
+
+{% endblock %}

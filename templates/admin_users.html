@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Usuarios Admin{% endblock %}
+
+{% block content %}
+    <section class="admin-section">
+        <h2>Gestión de Usuarios Administradores</h2>
+        <a href="{{ url_for('add_user') }}" class="admin-button add-button">Añadir Nuevo Usuario Admin</a>
+
+        {% if users %}
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre de Usuario</th>
+                        <th>Es Admin</th> {# Nueva columna #}
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.username }}</td>
+                        <td>{{ 'Sí' if user.is_admin else 'No' }}</td> {# Muestra si es admin #}
+                        <td class="actions">
+                            <a href="{{ url_for('edit_user', user_id=user.id) }}" class="action-link edit-link">Editar</a>
+                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="action-link delete-link" onclick="return confirm('¿Estás seguro de que quieres eliminar a este usuario?');" {% if user.id == current_user.id %}disabled{% endif %}>Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p class="no-news-message">No hay usuarios registrados.</p>
+        {% endif %}
+    </section>
+{% endblock %}

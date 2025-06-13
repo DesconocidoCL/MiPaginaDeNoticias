@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Bandeja de Entrada{% endblock %}
+
+{% block content %}
+<section class="admin-section">
+    <h2 class="category-title">Bandeja de Entrada</h2>
+
+    {% if contact_messages %}
+        <div class="contact-message-list">
+            {% for message in contact_messages %}
+            <!-- Usamos las etiquetas <details> y <summary> para crear un acordeón nativo -->
+            <details class="contact-item">
+                <summary class="contact-summary">
+                    <div class="summary-info">
+                        <strong>De:</strong> {{ message.name }}
+                        <span class="summary-subject">{{ message.subject or 'Sin Asunto' }}</span>
+                    </div>
+                    <div class="summary-meta">
+                        <span class="summary-date">{{ message.timestamp.strftime('%d/%m/%Y %H:%M') }}</span>
+                        <span class="summary-action">Ver Mensaje</span>
+                    </div>
+                </summary>
+                <div class="contact-content">
+                    <p><strong>Email:</strong> {{ message.email }}</p>
+                    <hr>
+                    <p class="message-body">{{ message.message }}</p>
+                    <div class="message-footer">
+                        <form action="{{ url_for('delete_contact_message', message_id=message.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de que quieres eliminar este mensaje? No se puede deshacer.');">
+                            <button type="submit" class="button-danger">Eliminar Mensaje</button>
+                        </form>
+                    </div>
+                </div>
+            </details>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="no-content-message">
+            <p>Tu bandeja de entrada está vacía. ¡Buen trabajo!</p>
+        </div>
+    {% endif %}
+
+</section>
+{% endblock %}

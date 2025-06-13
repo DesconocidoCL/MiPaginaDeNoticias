@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Contacto{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="text-center mb-5">
+            <h1 class="display-5">Ponte en Contacto</h1>
+            <p class="lead text-muted">Si deseas enviarnos información, comunicarte con nuestro equipo o reportar un error, por favor, completa el siguiente formulario.</p>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <form action="{{ url_for('contact_page') }}" method="POST">
+                    
+                    <!-- Nombre -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Nombre Completo</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Correo Electrónico</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+
+                    <!-- Asunto -->
+                    <div class="mb-3">
+                        <label for="subject" class="form-label">Asunto</label>
+                        <input type="text" class="form-control" id="subject" name="subject">
+                    </div>
+
+                    <!-- Mensaje -->
+                    <div class="mb-3">
+                        <label for="message" class="form-label">Mensaje / Información</label>
+                        <textarea class="form-control" id="message" name="message" rows="6" required></textarea>
+                    </div>
+
+                    <!-- Botón de envío -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">Enviar Mensaje</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <p class="text-center text-muted mt-4">Agradecemos tu colaboración. Nos pondremos en contacto contigo si es necesario.</p>
+    </div>
+</div>
+{% endblock %}

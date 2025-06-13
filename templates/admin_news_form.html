@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <h2 class="mb-4">{{ title }}</h2>
+
+        <!-- Mostrar imagen actual si existe -->
+        {% if news and news.image_filename %}
+            <div class="mb-3">
+                <p><strong>Imagen Actual:</strong></p>
+                <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="Imagen actual" class="img-fluid rounded" style="max-height: 200px;">
+            </div>
+        {% endif %}
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <form method="POST" action="" enctype="multipart/form-data">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.title.label(class="form-label") }}
+                        {{ form.title(class="form-control form-control-lg") }}
+                        {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.category.label(class="form-label") }}
+                            {{ form.category(class="form-select") }}
+                            {% for error in form.category.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.author.label(class="form-label") }}
+                            {{ form.author(class="form-control", placeholder="Ej: Equipo de Redacción") }}
+                            {% for error in form.author.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.content.label(class="form-label") }}
+                        {{ form.content(class="form-control", rows="10") }}
+                        {% for error in form.content.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ form.image_file.label(class="form-label") }}
+                        {{ form.image_file(class="form-control") }}
+                        {% for error in form.image_file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        <div class="form-text">Sube una imagen (JPG, PNG). Reemplazará la imagen actual.</div>
+                    </div>
+                    
+                    <!-- ! NUEVO: Checkbox para borrar imagen, solo se muestra al editar -->
+                    {% if news and news.image_filename %}
+                    <div class="form-check mb-3">
+                        {{ form.delete_image(class="form-check-input") }}
+                        {{ form.delete_image.label(class="form-check-label text-danger") }}
+                    </div>
+                    {% endif %}
+
+                    <hr>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('admin_news') }}" class="btn btn-secondary me-md-2">Cancelar</a>
+                        {{ form.submit(class="btn btn-primary") }}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

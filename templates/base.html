@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desconocido - {% block title %}{% endblock %}</title>
+    
+    <!-- Fuentes de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Nuestro CSS personalizado que define el nuevo estilo -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo-container">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='logo1.png') }}" alt="Logo Desconocido" class="logo">
+            </a>
+            <h1><a href="{{ url_for('index') }}">DESCONOCIDO</a></h1>
+        </div>
+        <nav class="main-nav">
+            <ul>
+                <li><a href="{{ url_for('index') }}">INICIO</a></li>
+                <li><a href="{{ url_for('category_region') }}">LA REGION</a></li>
+                <li><a href="{{ url_for('category_politica') }}">POLITICA</a></li>
+                <li><a href="{{ url_for('category_opinion') }}">OPINION</a></li>
+                <li><a href="{{ url_for('category_ciencia_tecnologia') }}">CIENCIA Y TECNOLOGIA</a></li>
+                <li><a href="{{ url_for('contact_page') }}">CONTACTO</a></li>
+                
+                {% if current_user.is_authenticated and current_user.is_admin %}
+                    <li class="admin-menu"><a href="{{ url_for('admin_dashboard') }}">ADMIN</a></li>
+                    <li><a href="{{ url_for('logout') }}">SALIR</a></li>
+                {% else %}
+                    <li class="admin-menu"><a href="{{ url_for('login') }}">INICIAR SESIÓN</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Mensajes Flash con nuestro estilo personalizado -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2025 Desconocido. Todos los derechos reservados.</p>
+    </footer>
+</body>
+</html>
