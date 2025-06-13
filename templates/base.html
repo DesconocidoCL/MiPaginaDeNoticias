@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desconocido - {% block title %}{% endblock %}</title>
     
-    <!-- ! NUEVO: Esta línea agrega el logo a la pestaña del navegador -->
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='logo1.jpg') }}">
+    <!-- ! CORREGIDO: Ahora apunta a 'logo1.png' para el logo de la pestaña -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='logo1.png') }}">
     
     <!-- Fuentes de Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,8 +20,8 @@
     <header class="main-header">
         <div class="logo-container">
             <a href="{{ url_for('index') }}">
-                <!-- Asumimos que también tienes un logo para el header, si no, puedes usar el mismo 'logo1.jpg' -->
-                <img src="{{ url_for('static', filename='logo1.jpg') }}" alt="Logo Desconocido" class="logo">
+                <!-- ! CORREGIDO: Ahora apunta a 'logo1.png' para el logo del encabezado -->
+                <img src="{{ url_for('static', filename='logo1.png') }}" alt="Logo Desconocido" class="logo">
             </a>
             <h1><a href="{{ url_for('index') }}">DESCONOCIDO</a></h1>
         </div>
@@ -45,7 +45,6 @@
     </header>
 
     <main class="container">
-        <!-- Mensajes Flash con nuestro estilo personalizado -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="flash-messages">
