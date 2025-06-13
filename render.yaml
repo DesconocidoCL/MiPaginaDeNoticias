@@ -1,0 +1,21 @@
+# Este archivo es el manual de instrucciones para el servidor de Render.
+# Garantiza que la página se construya y ejecute correctamente.
+
+services:
+  # Define el servicio web principal
+  - type: web
+    name: eldesconocido
+    env: python
+    plan: free # El plan gratuito
+    
+    # Comandos para construir y arrancar el servidor
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn --workers 4 --bind 0.0.0.0:$PORT app:app"
+    
+    # ¡LA CLAVE! Esto crea un "disco duro" persistente en el servidor.
+    # Aquí se guardarán tu base de datos y las imágenes que subas,
+    # asegurando que NO se borren con las actualizaciones.
+    disks:
+      - name: data-disk
+        mountPath: /var/data/eldesconocido_data
+        sizeGB: 1

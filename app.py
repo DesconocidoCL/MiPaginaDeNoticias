@@ -1,4 +1,5 @@
 import os
+import sys
 from datetime import datetime
 from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
@@ -14,18 +15,17 @@ from werkzeug.utils import secure_filename
 # 1. CONFIGURACIÓN DE LA APLICACIÓN
 # ==============================================================================
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'esta-es-una-clave-secreta-muy-larga-y-dificil-de-adivinar'
+app.config['SECRET_KEY'] = 'esta-es-una-clave-secreta-muy-larga-y-dificil-de-adivinar-para-la-seguridad'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# --- Configuración de Directorios para Render (MUY IMPORTANTE) ---
-# Si el código se está ejecutando en Render, usamos su disco persistente.
+# --- Configuración de Directorios para Render (CORREGIDA Y DEFINITIVA) ---
+# Esta es la parte que fallaba. Ahora apunta al disco persistente definido en render.yaml.
 if os.environ.get('RENDER'):
     data_dir = '/var/data/eldesconocido_data'
 else:
-    # Si lo ejecutas en tu computador, usa una carpeta local llamada 'instance'.
+    # Para pruebas en tu computador, usa una carpeta local llamada 'instance'.
     data_dir = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'instance')
 
-# Rutas para la base de datos y las imágenes
 upload_path = os.path.join(data_dir, 'uploads')
 db_path = os.path.join(data_dir, 'site.db')
 
@@ -41,7 +41,7 @@ app.config['UPLOAD_FOLDER'] = upload_path
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
-login_manager.login_message = "Debes iniciar sesión para acceder."
+login_manager.login_message = "Debes iniciar sesión para acceder a esta página."
 login_manager.login_message_category = "info"
 
 class User(db.Model, UserMixin):
@@ -58,7 +58,7 @@ class NewsArticle(db.Model):
     title = db.Column(db.String(200), nullable=False)
     category = db.Column(db.String(50), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    author = db.Column(db.String(100))
+    author = db.Column(db.String(100), nullable=True, default="Equipo Desconocido")
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     image_filename = db.Column(db.String(100), nullable=True)
 
@@ -83,10 +83,10 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Iniciar Sesión')
 
 class NewsForm(FlaskForm):
-    title = StringField('Título de la Noticia', validators=[DataRequired(), Length(min=5)])
-    category = SelectField('Categoría', choices=[('LA REGION', 'La Región'), ('POLITICA', 'Política'), ('OPINION', 'Opinión'), ('CIENCIA Y TECNOLOGIA', 'Ciencia y Tecnología')])
+    title = StringField('Título de la Noticia', validators=[DataRequired(), Length(min=5, message="El título debe tener al menos 5 caracteres.")])
+    category = SelectField('Categoría', choices=[('LA REGION', 'La Región'), ('POLITICA', 'Política'), ('OPINION', 'Opinión'), ('CIENCIA Y TECNOLOGIA', 'Ciencia y Tecnología')], validators=[DataRequired()])
     author = StringField('Autor (Opcional)')
-    content = TextAreaField('Contenido de la Noticia', validators=[DataRequired()])
+    content = TextAreaField('Contenido de la Noticia', validators=[DataRequired(message="El contenido no puede estar vacío.")])
     image_file = FileField('Cambiar/Subir Imagen')
     delete_image = BooleanField('Eliminar imagen actual')
     submit = SubmitField('Guardar Noticia')
@@ -115,7 +115,7 @@ def index():
         opinion_news = NewsArticle.query.filter_by(category='OPINION').order_by(NewsArticle.date_posted.desc()).limit(4).all()
         ciencia_tecnologia_news = NewsArticle.query.filter_by(category='CIENCIA Y TECNOLOGIA').order_by(NewsArticle.date_posted.desc()).limit(4).all()
     except Exception as e:
-        print(f"Error al consultar noticias: {e}")
+        print(f"Error al cargar noticias: {e}", file=sys.stderr)
         region_news, politica_news, opinion_news, ciencia_tecnologia_news = [], [], [], []
     return render_template('index.html', region_news=region_news, politica_news=politica_news, opinion_news=opinion_news, ciencia_tecnologia_news=ciencia_tecnologia_news)
 
@@ -127,7 +127,7 @@ def uploaded_file(filename):
 def news_detail(news_id):
     news_article = NewsArticle.query.get_or_404(news_id)
     return render_template('new_detail.html', news=news_article)
-
+    
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
@@ -167,6 +167,26 @@ def contact_page():
         return redirect(url_for('contact_page'))
     return render_template('contact.html')
 
+@app.route('/la-region')
+def category_region():
+    news = NewsArticle.query.filter_by(category='LA REGION').order_by(NewsArticle.date_posted.desc()).all()
+    return render_template('category_news.html', title='La Región', news_articles=news)
+
+@app.route('/politica')
+def category_politica():
+    news = NewsArticle.query.filter_by(category='POLITICA').order_by(NewsArticle.date_posted.desc()).all()
+    return render_template('category_news.html', title='Política', news_articles=news)
+
+@app.route('/opinion')
+def category_opinion():
+    news = NewsArticle.query.filter_by(category='OPINION').order_by(NewsArticle.date_posted.desc()).all()
+    return render_template('category_news.html', title='Opinión', news_articles=news)
+
+@app.route('/ciencia-tecnologia')
+def category_ciencia_tecnologia():
+    news = NewsArticle.query.filter_by(category='CIENCIA Y TECNOLOGIA').order_by(NewsArticle.date_posted.desc()).all()
+    return render_template('category_news.html', title='Ciencia y Tecnología', news_articles=news)
+
 # --- Rutas Admin ---
 @app.route('/admin/dashboard')
 @admin_required
@@ -192,7 +212,7 @@ def add_news():
                     filename = secure_filename(file.filename)
                     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 else:
-                    flash('Error: Tipo de archivo no permitido.', 'danger')
+                    flash('Error: Tipo de archivo de imagen no permitido.', 'danger')
                     return render_template('admin_news_form.html', title='Añadir Noticia', form=form)
             new_article = NewsArticle(title=form.title.data, category=form.category.data, content=form.content.data, author=form.author.data, image_filename=filename)
             db.session.add(new_article)
@@ -201,9 +221,8 @@ def add_news():
             return redirect(url_for('admin_news'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al guardar en la base de datos: {e}', 'danger')
-    elif request.method == 'POST':
-        flash('El formulario tiene errores. Revisa los campos.', 'danger')
+            flash(f'Error al guardar la noticia: {e}', 'danger')
+            print(f"ERROR DB (add): {e}", file=sys.stderr)
     return render_template('admin_news_form.html', title='Añadir Noticia', form=form)
 
 @app.route('/admin/news/edit/<int:news_id>', methods=['GET', 'POST'])
@@ -239,7 +258,7 @@ def edit_news(news_id):
             db.session.rollback()
             flash(f'Error al actualizar la noticia: {e}', 'danger')
     return render_template('admin_news_form.html', title='Editar Noticia', form=form, news=news_article)
-
+    
 @app.route('/admin/news/delete/<int:news_id>', methods=['POST'])
 @admin_required
 def delete_news(news_id):
@@ -252,6 +271,12 @@ def delete_news(news_id):
     db.session.commit()
     flash('Noticia eliminada.', 'success')
     return redirect(url_for('admin_news'))
+    
+@app.route('/admin/contacts')
+@admin_required
+def admin_contacts():
+    messages = ContactMessage.query.order_by(ContactMessage.timestamp.desc()).all()
+    return render_template('admin_contacts.html', contact_messages=messages)
 
 # ==============================================================================
 # 5. INICIALIZACIÓN DE LA BASE DE DATOS
@@ -260,7 +285,7 @@ with app.app_context():
     db.create_all()
     if not User.query.first():
         admin_username = 'eldesconocido'
-        admin_password = 'PasswordSeguro2025' # ¡CAMBIA ESTA CONTRASEÑA!
+        admin_password = 'PasswordSeguro2025' # ¡DEBES CAMBIAR ESTA CONTRASEÑA!
         hashed_password = generate_password_hash(admin_password)
         admin_user = User(username=admin_username, password_hash=hashed_password, is_admin=True)
         db.session.add(admin_user)
@@ -270,3 +295,4 @@ with app.app_context():
 # Esta parte es solo para ejecutar en tu propio computador
 if __name__ == '__main__':
     app.run(debug=True)
+
