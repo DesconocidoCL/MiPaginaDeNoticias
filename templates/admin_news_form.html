@@ -25,7 +25,6 @@
             {{ form.author(class="form-control") }}
         </div>
         
-        <!-- ! MEJORADO: Aquí va el editor de texto enriquecido -->
         <div class="form-group">
             {{ form.content.label(class="form-label") }}
             {{ form.content(class="tinymce-editor") }}
@@ -57,7 +56,7 @@
     </form>
 </section>
 
-<!-- ! NUEVO: Scripts para activar el editor de texto -->
+<!-- Scripts para activar el editor de texto -->
 <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 <script>
   tinymce.init({
@@ -66,7 +65,14 @@
     toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
     height: 400,
     menubar: false,
-    readonly: false /* ! AÑADIDO: Esta línea fuerza al editor a ser editable. */
   });
 </script>
+
+<!-- ! NUEVO: Estilo para ocultar el aviso de la API Key -->
+<style>
+    .tox-notifications-container {
+        display: none !important;
+    }
+</style>
+
 {% endblock %}
