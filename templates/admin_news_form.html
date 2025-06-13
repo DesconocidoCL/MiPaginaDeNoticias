@@ -3,72 +3,70 @@
 {% block title %}{{ title }}{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <h2 class="mb-4">{{ title }}</h2>
+<section class="admin-form-section">
+    <h2 class="category-title">{{ title }}</h2>
 
-        <!-- Mostrar imagen actual si existe -->
+    <!-- Formulario -->
+    <form method="POST" action="" class="styled-form" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+
+        <div class="form-group">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.category.label(class="form-label") }}
+            {{ form.category(class="form-control") }}
+        </div>
+
+        <div class="form-group">
+            {{ form.author.label(class="form-label") }}
+            {{ form.author(class="form-control") }}
+        </div>
+        
+        <!-- ! MEJORADO: Aquí va el editor de texto enriquecido -->
+        <div class="form-group">
+            {{ form.content.label(class="form-label") }}
+            {{ form.content(class="tinymce-editor") }}
+        </div>
+
         {% if news and news.image_filename %}
-            <div class="mb-3">
+            <div class="form-group current-image-preview">
                 <p><strong>Imagen Actual:</strong></p>
-                <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="Imagen actual" class="img-fluid rounded" style="max-height: 200px;">
+                <img src="{{ url_for('uploaded_file', filename=news.image_filename) }}" alt="Imagen actual">
             </div>
         {% endif %}
-
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <form method="POST" action="" enctype="multipart/form-data">
-                    {{ form.hidden_tag() }}
-
-                    <div class="mb-3">
-                        {{ form.title.label(class="form-label") }}
-                        {{ form.title(class="form-control form-control-lg") }}
-                        {% for error in form.title.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form.category.label(class="form-label") }}
-                            {{ form.category(class="form-select") }}
-                            {% for error in form.category.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form.author.label(class="form-label") }}
-                            {{ form.author(class="form-control", placeholder="Ej: Equipo de Redacción") }}
-                            {% for error in form.author.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form.content.label(class="form-label") }}
-                        {{ form.content(class="form-control", rows="10") }}
-                        {% for error in form.content.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form.image_file.label(class="form-label") }}
-                        {{ form.image_file(class="form-control") }}
-                        {% for error in form.image_file.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
-                        <div class="form-text">Sube una imagen (JPG, PNG). Reemplazará la imagen actual.</div>
-                    </div>
-                    
-                    <!-- ! NUEVO: Checkbox para borrar imagen, solo se muestra al editar -->
-                    {% if news and news.image_filename %}
-                    <div class="form-check mb-3">
-                        {{ form.delete_image(class="form-check-input") }}
-                        {{ form.delete_image.label(class="form-check-label text-danger") }}
-                    </div>
-                    {% endif %}
-
-                    <hr>
-                    
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ url_for('admin_news') }}" class="btn btn-secondary me-md-2">Cancelar</a>
-                        {{ form.submit(class="btn btn-primary") }}
-                    </div>
-                </form>
-            </div>
+        
+        <div class="form-group">
+            {{ form.image_file.label(class="form-label") }}
+            {{ form.image_file(class="form-control-file") }}
         </div>
-    </div>
-</div>
+        
+        {% if news and news.image_filename %}
+        <div class="form-group checkbox-group">
+            {{ form.delete_image(class="form-checkbox") }}
+            {{ form.delete_image.label(class="form-label-checkbox") }}
+        </div>
+        {% endif %}
+
+        <div class="form-group form-buttons">
+            <a href="{{ url_for('admin_news') }}" class="button-secondary">Cancelar</a>
+            {{ form.submit(class="button-primary") }}
+        </div>
+    </form>
+</section>
+
+<!-- ! NUEVO: Scripts para activar el editor de texto -->
+<script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+<script>
+  tinymce.init({
+    selector: 'textarea.tinymce-editor',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    height: 400,
+    menubar: false,
+    readonly: false /* ! AÑADIDO: Esta línea fuerza al editor a ser editable. */
+  });
+</script>
 {% endblock %}
