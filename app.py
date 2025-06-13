@@ -1,23 +1,15 @@
-# Forzando un redespliegue
 from flask import Flask, render_template, request, redirect, url_for, flash, session, send_from_directory
 from werkzeug.security import generate_password_hash
 from werkzeug.utils import secure_filename
 import os
 from datetime import datetime
 
-# IMPORTANTE: Importamos db y login_manager desde nuestro archivo extensions.py
+# Importaciones de la aplicación
 from extensions import db, login_manager
-
-# Importamos la configuración y los formularios
 from config import SECRET_KEY, SQLALCHEMY_DATABASE_URI, UPLOAD_FOLDER, ALLOWED_EXTENSIONS
 from forms import LoginForm, NewsForm
-
-# Importamos los modelos (User, NewsArticle, ContactMessage)
 from models import User, NewsArticle, ContactMessage
-
-# Importamos de flask_login
 from flask_login import login_user, logout_user, login_required, current_user
-
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = SECRET_KEY
@@ -25,6 +17,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Asegurarse de que la carpeta de subidas exista
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
@@ -42,9 +35,21 @@ def allowed_file(filename):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# --- Rutas Públicas (sin cambios) ---
+# --- Decorador de Admin ---
+from functools import wraps
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin:
+            flash('Debes ser administrador para acceder a esta página.', 'danger')
+            return redirect(url_for('login', next=request.url))
+        return f(*args, **kwargs)
+    return decorated_function
+
+# --- Rutas Públicas ---
 @app.route('/')
 def index():
+    # El código para la página de inicio se mantiene igual
     region_news = NewsArticle.query.filter_by(category='LA REGION').order_by(NewsArticle.date_posted.desc()).limit(4).all()
     politica_news = NewsArticle.query.filter_by(category='POLITICA').order_by(NewsArticle.date_posted.desc()).limit(4).all()
     opinion_news = NewsArticle.query.filter_by(category='OPINION').order_by(NewsArticle.date_posted.desc()).limit(4).all()
@@ -60,7 +65,6 @@ def news_detail(news_id):
     news_article = NewsArticle.query.get_or_404(news_id)
     return render_template('new_detail.html', news=news_article)
 
-# ... (todas las rutas de categorías permanecen iguales) ...
 @app.route('/la-region')
 def category_region():
     news_articles = NewsArticle.query.filter_by(category='LA REGION').order_by(NewsArticle.date_posted.desc()).all()
@@ -80,7 +84,6 @@ def category_opinion():
 def category_ciencia_tecnologia():
     news_articles = NewsArticle.query.filter_by(category='CIENCIA Y TECNOLOGIA').order_by(NewsArticle.date_posted.desc()).all()
     return render_template('category_news.html', title='Noticias de Ciencia y Tecnología', news_articles=news_articles)
-
 
 @app.route('/contacto', methods=['GET', 'POST'])
 def contact_page():
@@ -108,11 +111,10 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data) and user.is_admin:
-            # ! MEJORADO: La sesión se cerrará al cerrar el navegador
             session.permanent = False
             login_user(user, remember=False)
-            next_page = request.args.get('next')
             flash('¡Inicio de sesión como Administrador exitoso!', 'success')
+            next_page = request.args.get('next')
             return redirect(next_page or url_for('admin_dashboard'))
         else:
             flash('Credenciales incorrectas. Por favor, verifica tu usuario y contraseña.', 'danger')
@@ -125,18 +127,7 @@ def logout():
     flash('Has cerrado sesión.', 'info')
     return redirect(url_for('index'))
 
-# --- Decorador de Admin ---
-from functools import wraps
-def admin_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin:
-            flash('Debes ser administrador para acceder a esta página.', 'danger')
-            return redirect(url_for('login', next=request.url))
-        return f(*args, **kwargs)
-    return decorated_function
-
-# --- Rutas de Administración (sin cambios) ---
+# --- Rutas de Administración ---
 @app.route('/admin/dashboard')
 @admin_required
 def admin_dashboard():
@@ -144,46 +135,66 @@ def admin_dashboard():
     total_messages = ContactMessage.query.count()
     return render_template('admin_dashboard.html', total_news=total_news, total_messages=total_messages)
 
-# ... (todas las rutas de gestión de noticias y contactos permanecen iguales) ...
 @app.route('/admin/news')
 @admin_required
 def admin_news():
     news_articles = NewsArticle.query.order_by(NewsArticle.date_posted.desc()).all()
     return render_template('admin_news.html', news_articles=news_articles)
 
+# ! CORREGIDO: Lógica para Añadir Noticia
 @app.route('/admin/news/add', methods=['GET', 'POST'])
 @admin_required
 def add_news():
     form = NewsForm()
     if form.validate_on_submit():
         filename = None
+        # Procesa la subida de imagen
         if form.image_file.data:
             file = form.image_file.data
             if allowed_file(file.filename):
                 filename = secure_filename(file.filename)
-                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                try:
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                except Exception as e:
+                    flash(f'Error al guardar la imagen: {e}', 'danger')
+                    return render_template('admin_news_form.html', title='Añadir Noticia', form=form)
             else:
                 flash('Tipo de archivo de imagen no permitido.', 'danger')
                 return render_template('admin_news_form.html', title='Añadir Noticia', form=form)
-        new_article = NewsArticle(title=form.title.data, category=form.category.data.upper(), content=form.content.data, author=form.author.data, image_filename=filename)
+        
+        # Crea el nuevo artículo en la base de datos
+        new_article = NewsArticle(
+            title=form.title.data,
+            category=form.category.data.upper(),
+            content=form.content.data,
+            author=form.author.data,
+            image_filename=filename
+        )
         db.session.add(new_article)
         db.session.commit()
+        
         flash('Noticia creada exitosamente.', 'success')
         return redirect(url_for('admin_news'))
+        
     return render_template('admin_news_form.html', title='Añadir Noticia', form=form, news=None)
 
+# ! CORREGIDO: Lógica para Editar Noticia
 @app.route('/admin/news/edit/<int:news_id>', methods=['GET', 'POST'])
 @admin_required
 def edit_news(news_id):
     news_article = NewsArticle.query.get_or_404(news_id)
     form = NewsForm(obj=news_article)
+    
     if form.validate_on_submit():
+        # Lógica para borrar la imagen
         if form.delete_image.data:
             if news_article.image_filename:
                 old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], news_article.image_filename)
                 if os.path.exists(old_image_path):
                     os.remove(old_image_path)
                 news_article.image_filename = None
+        
+        # Lógica para subir una nueva imagen
         if form.image_file.data:
             file = form.image_file.data
             if allowed_file(file.filename):
@@ -191,20 +202,26 @@ def edit_news(news_id):
                     old_image_path = os.path.join(app.config['UPLOAD_FOLDER'], news_article.image_filename)
                     if os.path.exists(old_image_path):
                         os.remove(old_image_path)
+                
                 filename = secure_filename(file.filename)
                 file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
                 news_article.image_filename = filename
             else:
                 flash('Tipo de archivo de imagen no permitido.', 'danger')
                 return render_template('admin_news_form.html', title='Editar Noticia', form=form, news=news_article)
+
+        # Actualiza los otros campos
         news_article.title = form.title.data
         news_article.category = form.category.data.upper()
         news_article.author = form.author.data
         news_article.content = form.content.data
+        
         db.session.commit()
         flash('Noticia actualizada exitosamente.', 'success')
         return redirect(url_for('admin_news'))
+        
     return render_template('admin_news_form.html', title='Editar Noticia', form=form, news=news_article)
+
 
 @app.route('/admin/news/delete/<int:news_id>', methods=['POST'])
 @admin_required
@@ -234,22 +251,18 @@ def delete_contact_message(message_id):
     flash('Mensaje eliminado.', 'danger')
     return redirect(url_for('admin_contacts'))
 
-# --- Lógica de Inicialización de la Aplicación ---
+# --- Lógica de Inicialización ---
 def create_initial_admin(app):
     with app.app_context():
         db.create_all() 
-
-        # === ¡¡¡ATENCIÓN!!! CONFIGURA AQUÍ TU ADMINISTRADOR ÚNICO ===
-        ADMIN_USERNAME = 'Mate'  # <-- CAMBIA ESTO por un nombre simple (sin espacios)
-        ADMIN_PASSWORD = 'Cav73@Afv%ASd+' # <-- CAMBIA ESTO por tu contraseña segura
-
+        ADMIN_USERNAME = 'editor'
+        ADMIN_PASSWORD = 'password123' 
         if not User.query.first():
             hashed_password = generate_password_hash(ADMIN_PASSWORD)
             admin_user = User(username=ADMIN_USERNAME, password_hash=hashed_password, is_admin=True)
             db.session.add(admin_user)
             db.session.commit()
-            print(f"--- Usuario administrador '{ADMIN_USERNAME}' creado exitosamente. ---")
-            print("--- ¡YA PUEDES INICIAR SESIÓN! ---")
+            print(f"--- Usuario administrador '{ADMIN_USERNAME}' creado. ---")
 
 if __name__ == '__main__':
     create_initial_admin(app) 
